@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Venue } from "./types/api";
+
+import { MapView } from "./map/MapView";
 import { fetchVenues } from "./api/venue";
 
 function App() {
@@ -9,13 +11,7 @@ function App() {
     fetchVenues().then(setVenues);
   }, []);
 
-  return (
-    <ul>
-      {venues.map((v) => (
-        <li key={v.id}>{v.name}</li>
-      ))}
-    </ul>
-  );
+  return <MapView venues={venues} />;
 }
 
 export default App;
