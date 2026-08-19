@@ -15,8 +15,7 @@ function App() {
   return (
     <div>
       <p>Stream status: {status}</p>
-      <p>Events received: {events.length}</p>
-      <MapView venues={venues} />
+      <MapView venues={venues} events={events} />
     </div>
   );
 }

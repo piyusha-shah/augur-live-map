@@ -1,12 +1,19 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import type { Venue } from "../types/api";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import type { Venue, DetectionEvent, Severity } from "../types/api";
 
 interface MapViewProps {
     venues: Venue[];
+    events: DetectionEvent[];
 }
 
-export function MapView({ venues }: MapViewProps) {
-    // London roughly centers all 5 venues; fine as a fixed starting view
+const severityColor: Record<Severity, string> = {
+    low: "#2e7d32",      // green
+    medium: "#f9a825",   // amber
+    high: "#ef6c00",     // orange
+    critical: "#c62828", // red
+};
+
+export function MapView({ venues, events }: MapViewProps) {
     const initialCenter: [number, number] = [51.51, -0.15];
 
     return (
@@ -15,10 +22,28 @@ export function MapView({ venues }: MapViewProps) {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap contributors"
             />
+
             {venues.map((venue) => (
                 <Marker key={venue.id} position={[venue.center.lat, venue.center.lng]}>
                     <Popup>{venue.name}</Popup>
                 </Marker>
+            ))}
+
+            {events.map((event) => (
+                <CircleMarker
+                    key={event.id}
+                    center={[event.position.lat, event.position.lng]}
+                    radius={8}
+                    pathOptions={{ color: severityColor[event.severity], fillOpacity: 0.7 }}
+                >
+                    <Popup>
+                        <strong>{event.type}</strong>
+                        <br />
+                        Severity: {event.severity}
+                        <br />
+                        {new Date(event.timestamp).toLocaleTimeString()}
+                    </Popup>
+                </CircleMarker>
             ))}
         </MapContainer>
     );
