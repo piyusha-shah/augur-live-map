@@ -1,4 +1,6 @@
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from "react-leaflet";
+import L from "leaflet";
 import type { Venue, DetectionEvent, Severity } from "../types/api";
 
 interface MapViewProps {
@@ -7,21 +9,40 @@ interface MapViewProps {
 }
 
 const severityColor: Record<Severity, string> = {
-    low: "#2e7d32",      // green
-    medium: "#f9a825",   // amber
-    high: "#ef6c00",     // orange
-    critical: "#c62828", // red
+    low: "#2e7d32",
+    medium: "#f9a825",
+    high: "#ef6c00",
+    critical: "#c62828",
 };
 
+function FitToVenues({ venues }: { venues: Venue[] }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (venues.length === 0) return;
+        const bounds = L.latLngBounds(
+            venues.flatMap((v) => [
+                [v.bounds.north, v.bounds.east],
+                [v.bounds.south, v.bounds.west],
+            ] as [number, number][])
+        );
+        map.fitBounds(bounds, { padding: [40, 40] });
+    }, [venues, map]);
+
+    return null;
+}
+
 export function MapView({ venues, events }: MapViewProps) {
-    const initialCenter: [number, number] = [51.51, -0.15];
+    const fallbackCenter: [number, number] = [51.51, -0.15];
 
     return (
-        <MapContainer center={initialCenter} zoom={11} style={{ height: "500px", width: "100%" }}>
+        <MapContainer center={fallbackCenter} zoom={11} style={{ height: "500px", width: "100%" }}>
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap contributors"
             />
+
+            <FitToVenues venues={venues} />
 
             {venues.map((venue) => (
                 <Marker key={venue.id} position={[venue.center.lat, venue.center.lng]}>
