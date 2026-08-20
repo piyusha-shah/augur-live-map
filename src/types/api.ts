@@ -12,6 +12,12 @@ export type EventType =
     | "unauthorised-access"
     | "medical-emergency";
 
+export interface EventFilters {
+    venueId: string | null;
+    type: EventType | null;
+    severity: Severity | null;
+}
+
 export type Severity = "low" | "medium" | "high" | "critical";
 
 export interface DetectionEvent {
