@@ -1,21 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchVenues } from "./api/venue";
-import { FilterPanel } from "./filter/FilterPanel";
 import type { Venue, EventFilters } from "./types/api";
 import { MapView } from "./map/MapView";
 import { useEventStream } from "./hooks/useEventStream";
+import { fetchVenues } from "./api/venue";
+import { FilterPanel } from "./filter/FilterPanel";
 
 function App() {
   const [venues, setVenues] = useState<Venue[]>([]);
-  const { events, totalReceived, status } = useEventStream();
+  const [venuesLoading, setVenuesLoading] = useState(true);
+  const [venuesError, setVenuesError] = useState<string | null>(null);
+  const { events, status } = useEventStream();
   const [filters, setFilters] = useState<EventFilters>({
     venueId: null,
     type: null,
     severity: null,
   });
 
+  const loadVenues = () => {
+    setVenuesLoading(true);
+    setVenuesError(null);
+    fetchVenues()
+      .then(setVenues)
+      .catch((err) => setVenuesError(err.message))
+      .finally(() => setVenuesLoading(false));
+  };
+
   useEffect(() => {
-    fetchVenues().then(setVenues);
+    loadVenues();
   }, []);
 
   const filteredEvents = useMemo(() => {
@@ -27,12 +38,26 @@ function App() {
     });
   }, [events, filters]);
 
+  if (venuesLoading) return <p>Loading venues…</p>;
+
+  if (venuesError) {
+    return (
+      <div>
+        <p>Couldn't load venues: {venuesError}</p>
+        <button onClick={loadVenues}>Retry</button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <FilterPanel venues={venues} filters={filters} onChange={setFilters} />
-      <p>
-        Stream status: {status} · Showing {filteredEvents.length} of {events.length} buffered ({totalReceived} received)
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <FilterPanel venues={venues} filters={filters} onChange={setFilters} />
+        <p>Stream: {status}</p>
+      </div>
+
+      {filteredEvents.length === 0 && <p>No events match the current filters.</p>}
+
       <MapView venues={venues} events={filteredEvents} />
     </div>
   );
