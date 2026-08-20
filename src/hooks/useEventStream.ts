@@ -6,11 +6,14 @@ export type ConnectionStatus = "connecting" | "open" | "reconnecting" | "error";
 
 export function useEventStream() {
     const [events, setEvents] = useState<DetectionEvent[]>([]);
+    const [totalReceived, setTotalReceived] = useState(0);
+
     const [status, setStatus] = useState<ConnectionStatus>("connecting");
     const hasConnectedOnceRef = useRef(false);
 
     useEffect(() => {
         const source = new EventSource(`${API_BASE_URL}/api/events/stream`);
+        const MAX_EVENTS = 200;
 
         source.addEventListener("open", () => {
             setStatus("open");
@@ -19,7 +22,8 @@ export function useEventStream() {
 
         source.addEventListener("detection", (e: MessageEvent) => {
             const newEvent: DetectionEvent = JSON.parse(e.data);
-            setEvents((prev) => [newEvent, ...prev]);
+            setEvents((prev) => [newEvent, ...prev].slice(0, MAX_EVENTS));
+            setTotalReceived((prev) => prev + 1);
         });
 
         source.addEventListener("error", () => {
@@ -31,5 +35,5 @@ export function useEventStream() {
         };
     }, []);
 
-    return { events, status };
+    return { events, totalReceived, status };
 }

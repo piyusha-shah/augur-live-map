@@ -6,7 +6,7 @@ import { useEventStream } from "./hooks/useEventStream";
 
 function App() {
   const [venues, setVenues] = useState<Venue[]>([]);
-  const { events, status } = useEventStream();
+  const { events, totalReceived, status } = useEventStream();
 
   useEffect(() => {
     fetchVenues().then(setVenues);
@@ -14,8 +14,9 @@ function App() {
 
   return (
     <div>
-      <p>Stream status: {status}</p>
-      <MapView venues={venues} events={events} />
+      <p>
+        Stream status: {status} · Showing {events.length} of {totalReceived} received
+      </p>      <MapView venues={venues} events={events} />
     </div>
   );
 }
